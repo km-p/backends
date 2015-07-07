@@ -92,7 +92,7 @@ class ESpeakTTSBackend(base.SimpleTTSBackendBase):
                 ret.append((voice,voice))
             return ret
         # ####################
-        # km-p 20150520
+        # km-p 20150520 mae
         elif setting == 'soundDevice':
             util.LOG (args)
             ret = []
