@@ -327,6 +327,11 @@ class SimpleTTSBackendBase(ThreadedTTSBackend):
     def setPlayer(self,preferred):
         self.player.setPlayer(preferred)
 
+    # km-p 20150521
+    def setPlayerSoundDevice (self, soundDevice):
+        util.LOG('{}.setPlayerSoundDevice to {}'.format(self.__class__.__name__, soundDevice))
+        self.player.setPlayerSoundDevice(soundDevice)
+
     def setSpeed(self,speed):
         self.player.setSpeed(speed)
 
@@ -387,6 +392,15 @@ class SimpleTTSBackendBase(ThreadedTTSBackend):
         for p in cls.playerClass.getAvailablePlayers():
             ret.append((p.ID,p.name))
         return ret
+
+    # km-p 201505
+    @classmethod
+    def getAvailablePlayerSoundDevices (cls, playerID):
+        util.LOG('{}.getAvailablePlayerSoundDevices({})'.format (cls.__name__, playerID))
+        devices = []
+        devices = cls.playerClass.getAvailablePlayerSoundDevices(playerID)
+        return devices
+
 
     def _stop(self):
         self.player.stop()

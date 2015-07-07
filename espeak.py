@@ -18,7 +18,8 @@ class ESpeakTTSBackend(base.SimpleTTSBackendBase):
                     'output_via_espeak':False,
                     'player':None,
                     'volume':0,
-                    'pipe':False
+                    'pipe':False,
+                    'soundDevice':''
     }
 
     def init(self):
@@ -52,6 +53,11 @@ class ESpeakTTSBackend(base.SimpleTTSBackendBase):
 
     def update(self):
         self.setPlayer(self.setting('player'))
+
+        # km-p 201505
+        util.LOG ('Setting soundDevice {0} for player {1}'.format (self.setting('soundDevice'), self.player))
+        self.setPlayerSoundDevice(self.setting('soundDevice'))
+
         self.setMode(self.getMode())
         self.voice = self.setting('voice')
         self.speed = self.setting('speed')
@@ -85,6 +91,16 @@ class ESpeakTTSBackend(base.SimpleTTSBackendBase):
                 voice = re.split('\s+',l.strip(),5)[3]
                 ret.append((voice,voice))
             return ret
+        # ####################
+        # km-p 20150520
+        elif setting == 'soundDevice':
+            util.LOG (args)
+            ret = []
+            if len(args) == 0: return ret
+            elif len(args) > 0:
+                ret = cls.getAvailablePlayerSoundDevices(args[0])
+            return ret
+        # ####################
         return None
 
     @staticmethod

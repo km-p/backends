@@ -174,6 +174,8 @@ class SubprocessAudioPlayer(AudioPlayer):
     _speedMultiplier = 1
     _volumeArgs = None
     _pipeArgs = None
+    _soundOutputArgs = None
+    _soundOutputDevice = ''      ## km-p 201505
     kill = False
 
     def __init__(self):
@@ -194,11 +196,26 @@ class SubprocessAudioPlayer(AudioPlayer):
     def playArgs(self,path):
         return self.baseArgs(path)
 
+    # km-p 20150520
+    def setSoundOutputDevice (self, device):
+        self._soundOutputDevice = device
+
     def canPipe(self):
         return bool(self._pipeArgs)
-
+        
     def pipe(self,source):
-        self._wavProcess = subprocess.Popen(self._pipeArgs,stdin=subprocess.PIPE,stdout=(open(os.path.devnull, 'w')), stderr=subprocess.STDOUT)
+        # km-p 201506
+        pipeArgs = self._pipeArgs
+        util.LOG ("SubprocessAudioPlayer.pipe: before adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
+        if self._soundOutputArgs is not None:
+            pipeArgs = pipeArgs + self._soundOutputArgs
+
+        util.LOG ("SubprocessAudioPlayer.pipe: after adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
+
+        #self._wavProcess = subprocess.Popen(self._pipeArgs,stdin=subprocess.PIPE,stdout=(open(os.path.devnull, 'w')), stderr=subprocess.STDOUT)
+        self._wavProcess = subprocess.Popen(pipeArgs,stdin=subprocess.PIPE,stdout=(open(os.path.devnull, 'w')), stderr=subprocess.STDOUT)
+        ##########
+
         try:
             shutil.copyfileobj(source,self._wavProcess.stdin)
         except IOError,e:
@@ -251,13 +268,63 @@ class SubprocessAudioPlayer(AudioPlayer):
             return False
         return True
 
+    # km-p 201505
+    @classmethod
+    def getAvailablePlayerSoundDevices (cls):
+        util.LOG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
+        devices = [('__default__', util.T(32201))]
+        return devices
+
 class AplayAudioPlayer(SubprocessAudioPlayer):
     ID = 'aplay'
     name = 'aplay'
     _availableArgs = ('aplay','--version')
     _playArgs = ('aplay','-q',None)
     _pipeArgs = ('aplay','-q')
+    _soundOutputArgs = None
     kill = True
+
+
+    # km-p 201505
+    def setSoundOutputDevice(self, device):
+        util.LOG('{}: Setting SoundOutputDevice to {}'.format(self.ID, device))
+        SubprocessAudioPlayer.setSoundOutputDevice(self, device)
+
+        util.LOG('{}: _pipeArgs before adding {}'.format(self.ID, self._pipeArgs))
+        if device <> '' and device <> '/' and device <> '__default__':
+            self._soundOutputArgs = ('-D{}'.format(device), )
+        else:
+            self._soundOutputArgs = None
+        util.LOG('{}: _pipeArgs after adding {}'.format(self.ID, self._pipeArgs))
+
+    # km-p 201505
+    @classmethod
+    def getAvailablePlayerSoundDevices (cls):
+        util.LOG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
+        devices = SubprocessAudioPlayer.getAvailablePlayerSoundDevices()
+
+        import re
+        output = subprocess.check_output(['aplay','-L']).splitlines()
+
+        util.LOG('{}.getAvailablePlayerSoundDevices - found devs = {}'.format (cls.__name__, output))
+
+        devName = ""
+        devDescription = ""
+        for l in output:
+            util.LOG ('{}.getAvailablePlayerSoundDevices - line = {}'.format (cls.__name__, l))
+            if l.find("CARD=") > 0:
+                if devName <> "":
+                    util.LOG('{}.getAvailablePlayerSoundDevices: Add Device {}: {}'.format(cls.__name__, devName, devDescription))
+                    devices.append((devName, devDescription))
+                devName = l
+                devDescription = l
+            else:
+                devDescription = (devDescription + " " + l.strip()).strip()
+
+        util.LOG('{}.getAvailablePlayerSoundDevices - found devices = {}'.format (cls.__name__, devices))
+
+        return devices
+
 
 class PaplayAudioPlayer(SubprocessAudioPlayer):
     ID = 'paplay'
@@ -492,6 +559,13 @@ class WavAudioPlayerHandler(BasePlayerHandler):
         if not self._player.ID == 'PlaySFX': load_snd_bm2835() #For Raspberry Pi
         return self._player
 
+    # km-p 20150521
+    def setPlayerSoundDevice (self, soundDevice):
+        util.LOG ('{0}: try setting soundDevice to {1}'.format (self, soundDevice))
+        if self._player.setSoundOutputDevice:
+            util.LOG ('{0}: setting soundDevice to {1}'.format (self, soundDevice))
+            self._player.setSoundOutputDevice (soundDevice)
+
     def _deleteOutFile(self):
         if os.path.exists(self.outFile): os.remove(self.outFile)
 
@@ -538,6 +612,21 @@ class WavAudioPlayerHandler(BasePlayerHandler):
         for p in cls.players:
             if p.available(): return True
         return False
+
+    # km-p 201506
+    @classmethod
+    def getAvailablePlayerSoundDevices (cls, playerID):
+        util.LOG ("{}.cls.getAvailablePlayerSoundDevices ({})".format(cls.__name__, playerID))
+
+        devices = []
+        for p in cls.players:
+            if p.available() and p.ID == playerID:
+                try:
+                    devices = p.getAvailablePlayerSoundDevices()
+                except AttributeError:
+                    pass
+
+        return devices
 
 class MP3AudioPlayerHandler(WavAudioPlayerHandler):
     players = (WindowsAudioPlayer,AfplayPlayer,SOXAudioPlayer,Mpg123AudioPlayer,Mpg321AudioPlayer,MPlayerAudioPlayer)
