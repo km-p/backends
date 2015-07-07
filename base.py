@@ -393,7 +393,7 @@ class SimpleTTSBackendBase(ThreadedTTSBackend):
             ret.append((p.ID,p.name))
         return ret
 
-    # km-p 201505 mae
+    # km-p 201505 mae added
     @classmethod
     def getAvailablePlayerSoundDevices (cls, playerID):
         util.LOG('{}.getAvailablePlayerSoundDevices({})'.format (cls.__name__, playerID))

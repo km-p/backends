@@ -613,7 +613,7 @@ class WavAudioPlayerHandler(BasePlayerHandler):
             if p.available(): return True
         return False
 
-    # km-p 201506 mae
+    # km-p 201506 mae added
     @classmethod
     def getAvailablePlayerSoundDevices (cls, playerID):
         util.LOG ("{}.cls.getAvailablePlayerSoundDevices ({})".format(cls.__name__, playerID))
