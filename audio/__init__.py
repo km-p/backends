@@ -272,7 +272,7 @@ class SubprocessAudioPlayer(AudioPlayer):
     @classmethod
     def getAvailablePlayerSoundDevices (cls):
         util.LOG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
-        devices = [('__default__', util.T(32201))]
+        devices = [('__default__', util.T(32203))]
         return devices
 
 class AplayAudioPlayer(SubprocessAudioPlayer):
