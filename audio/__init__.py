@@ -206,11 +206,11 @@ class SubprocessAudioPlayer(AudioPlayer):
     def pipe(self,source):
         # km-p 201506
         pipeArgs = self._pipeArgs
-        util.LOG ("SubprocessAudioPlayer.pipe: before adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
+        util.LOG_DEBUG ("SubprocessAudioPlayer.pipe: before adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
         if self._soundOutputArgs is not None:
             pipeArgs = pipeArgs + self._soundOutputArgs
 
-        util.LOG ("SubprocessAudioPlayer.pipe: after adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
+        util.LOG_DEBUG ("SubprocessAudioPlayer.pipe: after adding _soundOutputArgs pipeArgs={}".format (pipeArgs))
 
         #self._wavProcess = subprocess.Popen(self._pipeArgs,stdin=subprocess.PIPE,stdout=(open(os.path.devnull, 'w')), stderr=subprocess.STDOUT)
         self._wavProcess = subprocess.Popen(pipeArgs,stdin=subprocess.PIPE,stdout=(open(os.path.devnull, 'w')), stderr=subprocess.STDOUT)
@@ -271,7 +271,7 @@ class SubprocessAudioPlayer(AudioPlayer):
     # km-p 201505
     @classmethod
     def getAvailablePlayerSoundDevices (cls):
-        util.LOG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
+        util.LOG_DEBUG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
         devices = [('__default__', util.T(32203))]
         return devices
 
@@ -287,41 +287,41 @@ class AplayAudioPlayer(SubprocessAudioPlayer):
 
     # km-p 201505
     def setSoundOutputDevice(self, device):
-        util.LOG('{}: Setting SoundOutputDevice to {}'.format(self.ID, device))
+        util.LOG_DEBUG('{}: Setting SoundOutputDevice to {}'.format(self.ID, device))
         SubprocessAudioPlayer.setSoundOutputDevice(self, device)
 
-        util.LOG('{}: _pipeArgs before adding {}'.format(self.ID, self._pipeArgs))
+        util.LOG_DEBUG('{}: _pipeArgs before adding {}'.format(self.ID, self._pipeArgs))
         if device <> '' and device <> '/' and device <> '__default__':
             self._soundOutputArgs = ('-D{}'.format(device), )
         else:
             self._soundOutputArgs = None
-        util.LOG('{}: _pipeArgs after adding {}'.format(self.ID, self._pipeArgs))
+        util.LOG_DEBUG('{}: _pipeArgs after adding {}'.format(self.ID, self._pipeArgs))
 
     # km-p 201505
     @classmethod
     def getAvailablePlayerSoundDevices (cls):
-        util.LOG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
+        util.LOG_DEBUG('{}.getAvailablePlayerSoundDevices'.format (cls.__name__))
         devices = SubprocessAudioPlayer.getAvailablePlayerSoundDevices()
 
         import re
         output = subprocess.check_output(['aplay','-L']).splitlines()
 
-        util.LOG('{}.getAvailablePlayerSoundDevices - found devs = {}'.format (cls.__name__, output))
+        util.LOG_DEBUG('{}.getAvailablePlayerSoundDevices - found devs = {}'.format (cls.__name__, output))
 
         devName = ""
         devDescription = ""
         for l in output:
-            util.LOG ('{}.getAvailablePlayerSoundDevices - line = {}'.format (cls.__name__, l))
+            util.LOG_DEBUG ('{}.getAvailablePlayerSoundDevices - line = {}'.format (cls.__name__, l))
             if l.find("CARD=") > 0:
                 if devName <> "":
-                    util.LOG('{}.getAvailablePlayerSoundDevices: Add Device {}: {}'.format(cls.__name__, devName, devDescription))
+                    util.LOG_DEBUG('{}.getAvailablePlayerSoundDevices: Add Device {}: {}'.format(cls.__name__, devName, devDescription))
                     devices.append((devName, devDescription))
                 devName = l
                 devDescription = l
             else:
                 devDescription = (devDescription + " " + l.strip()).strip()
 
-        util.LOG('{}.getAvailablePlayerSoundDevices - found devices = {}'.format (cls.__name__, devices))
+        util.LOG_DEBUG('{}.getAvailablePlayerSoundDevices - found devices = {}'.format (cls.__name__, devices))
 
         return devices
 
@@ -561,9 +561,9 @@ class WavAudioPlayerHandler(BasePlayerHandler):
 
     # km-p 20150521
     def setPlayerSoundDevice (self, soundDevice):
-        util.LOG ('{0}: try setting soundDevice to {1}'.format (self, soundDevice))
+        util.LOG_DEBUG ('{0}: try setting soundDevice to {1}'.format (self, soundDevice))
         if self._player.setSoundOutputDevice:
-            util.LOG ('{0}: setting soundDevice to {1}'.format (self, soundDevice))
+            util.LOG_DEBUG ('{0}: setting soundDevice to {1}'.format (self, soundDevice))
             self._player.setSoundOutputDevice (soundDevice)
 
     def _deleteOutFile(self):
@@ -616,7 +616,7 @@ class WavAudioPlayerHandler(BasePlayerHandler):
     # km-p 201506 mae added
     @classmethod
     def getAvailablePlayerSoundDevices (cls, playerID):
-        util.LOG ("{}.cls.getAvailablePlayerSoundDevices ({})".format(cls.__name__, playerID))
+        util.LOG_DEBUG ("{}.cls.getAvailablePlayerSoundDevices ({})".format(cls.__name__, playerID))
 
         devices = []
         for p in cls.players:
